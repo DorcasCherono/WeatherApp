@@ -2,6 +2,6 @@
 
 # WeatherApp
 
-An android that gets the user's location and displays the weather condition.
+An android App that gets the user's location and displays the weather condition.
 
 ![Screenshot](Screenshot.png)
