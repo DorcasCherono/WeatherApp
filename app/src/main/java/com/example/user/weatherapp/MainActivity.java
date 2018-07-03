@@ -12,6 +12,7 @@ import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
@@ -32,6 +33,7 @@ import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity {
 
+    ImageView icon;
     TextView temperature, summary, time, locationText;
     ProgressBar progressBar;
     Toolbar toolbar;
@@ -50,6 +52,7 @@ public class MainActivity extends AppCompatActivity {
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(MainActivity.this);
         mResultReceiver = new AddressResultReceiver(null);
 
+        icon = findViewById(R.id.icon);
         temperature = findViewById(R.id.temperature);
         summary = findViewById(R.id.summary);
         progressBar = findViewById(R.id.progress);
@@ -180,6 +183,60 @@ public class MainActivity extends AppCompatActivity {
                 try {
                     JSONObject jsonResponse = new JSONObject(response);
                     JSONObject currently = jsonResponse.getJSONObject("currently");
+
+                    switch (currently.getString("icon")) {
+                        case "clear-day":
+                            icon.setImageResource(R.drawable.ic_clear_day);
+                            break;
+
+                        case "clear-night":
+                            icon.setImageResource(R.drawable.ic_clear_night);
+                            break;
+
+                        case "rain":
+                            icon.setImageResource(R.drawable.ic_rain);
+                            break;
+
+                        case "snow":
+                            icon.setImageResource(R.drawable.ic_snow);
+                            break;
+
+                        case "sleet":
+                            icon.setImageResource(R.drawable.ic_sleet);
+                            break;
+
+                        case "wind":
+                            icon.setImageResource(R.drawable.ic_wind);
+                            break;
+
+                        case "fog":
+                            icon.setImageResource(R.drawable.ic_fog);
+                            break;
+
+                        case "cloudy":
+                            icon.setImageResource(R.drawable.ic_cloudy);
+                            break;
+
+                        case "partly-cloudy-day":
+                            icon.setImageResource(R.drawable.ic_cloudy_day);
+                            break;
+
+                        case "partly-cloudy-night":
+                            icon.setImageResource(R.drawable.ic_cloudy_night);
+                            break;
+
+                        case "hail":
+                            icon.setImageResource(R.drawable.ic_hail);
+                            break;
+
+                        case "thunderstorm":
+                            icon.setImageResource(R.drawable.ic_thunderstorm);
+                            break;
+
+                        case "tornado":
+                            icon.setImageResource(R.drawable.ic_tornado);
+                            break;
+                    }
 
                     temperature.setText(currently.getDouble("temperature") + " °C");
                     summary.setText(currently.getString("summary"));
