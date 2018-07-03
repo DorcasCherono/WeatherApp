@@ -1,12 +1,19 @@
 package com.example.user.weatherapp;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.ResultReceiver;
+import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -43,7 +50,8 @@ public class MainActivity extends AppCompatActivity {
     protected Location mLastLocation;
     private AddressResultReceiver mResultReceiver;
 
-    @SuppressLint("MissingPermission")
+    private static final int ACCESS_FINE_LOCATION_PERMISSION = 430;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -66,26 +74,7 @@ public class MainActivity extends AppCompatActivity {
             public boolean onMenuItemClick(MenuItem item) {
                 switch (item.getItemId()) {
                     case R.id.refresh:
-                        progressBar.setVisibility(View.VISIBLE);
-                        mFusedLocationClient.getLastLocation()
-                                .addOnSuccessListener(MainActivity.this, new OnSuccessListener<Location>() {
-                                    @Override
-                                    public void onSuccess(Location location) {
-                                        progressBar.setVisibility(View.GONE);
-                                        // Got last known location. In some rare situations this can be null.
-                                        if (location != null) {
-                                            // Logic to handle location object
-                                            mLastLocation = location;
-                                            // Start service and update UI to reflect new location
-                                            startIntentService();
-
-                                            locationText.setText(String.format(Locale.getDefault(), "%s, %s", location.getLatitude(), location.getLongitude()));
-                                            new FetchWeather(location.getLatitude(), location.getLongitude()).execute();
-                                        } else {
-                                            locationText.setText("Failed to get location.");
-                                        }
-                                    }
-                                });
+                        checkLocationPermission();
                         break;
 
                     case R.id.history:
@@ -98,6 +87,78 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        checkLocationPermission();
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String permissions[], @NonNull int[] grantResults) {
+        switch (requestCode) {
+            case ACCESS_FINE_LOCATION_PERMISSION: {
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    // permission was granted, yay! Do the
+                    // contacts-related task you need to do.
+                    getLocation();
+                } else {
+                    // permission denied, boo! Disable the
+                    // functionality that depends on this permission.
+                    showPermissionExplanationDialog();
+                }
+                return;
+            }
+
+            // other 'case' lines to check for other
+            // permissions this app might request.
+        }
+    }
+
+    private void checkLocationPermission() {
+        // Here, thisActivity is the current activity
+        if (ContextCompat.checkSelfPermission(MainActivity.this,
+                Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+
+            // Permission is not granted
+            // Should we show an explanation?
+            if (ActivityCompat.shouldShowRequestPermissionRationale(MainActivity.this,
+                    Manifest.permission.ACCESS_FINE_LOCATION)) {
+                // Show an explanation to the user *asynchronously* -- don't block
+                // this thread waiting for the user's response! After the user
+                // sees the explanation, try again to request the permission.
+                showPermissionExplanationDialog();
+            } else {
+                // No explanation needed; request the permission
+                ActivityCompat.requestPermissions(MainActivity.this,
+                        new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                        ACCESS_FINE_LOCATION_PERMISSION);
+            }
+        } else {
+            getLocation();
+        }
+    }
+
+    private void showPermissionExplanationDialog() {
+        new AlertDialog.Builder(MainActivity.this)
+                .setMessage("WeatherApp requires permission to access your location")
+                .setCancelable(false)
+                .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        checkLocationPermission();
+                    }
+                })
+                .setNegativeButton("Exit", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        ActivityCompat.finishAffinity(MainActivity.this);
+                    }
+                })
+                .show();
+    }
+
+    @SuppressLint("MissingPermission")
+    private void getLocation() {
         progressBar.setVisibility(View.VISIBLE);
         mFusedLocationClient.getLastLocation()
                 .addOnSuccessListener(MainActivity.this, new OnSuccessListener<Location>() {
